@@ -10,48 +10,15 @@ import UIKit
 
 class TodoListViewController: UITableViewController {
     let reuse = "ToDoItemCell"
-    let key = "TodoListArray"
     var itemArray = [Item]()
-    
-    let defaults = UserDefaults.standard
+    let dataFilePath = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask).first?.appendingPathComponent("Items.plist")
 
     override func viewDidLoad() {
         super.viewDidLoad()
-        
-        let newItem = Item(title: "A")
-        itemArray.append(newItem)
-        
-        let newItem2 = Item(title: "B")
-        itemArray.append(newItem2)
-        
-        let newItem3 = Item(title: "C")
-        itemArray.append(newItem3)
-        
-        let newItem4 = Item(title: "D")
-        itemArray.append(newItem4)
-        
-        let newItem5 = Item(title: "E")
-        itemArray.append(newItem5)
-        
-        let newItem6 = Item(title: "F")
-        itemArray.append(newItem6)
-        
-        let newItem7 = Item(title: "G")
-        itemArray.append(newItem7)
-        
-        let newItem8 = Item(title: "H")
-        itemArray.append(newItem8)
-        
-        let newItem9 = Item(title: "I")
-        itemArray.append(newItem9)
-        
-        let newItem10 = Item(title: "J")
-        itemArray.append(newItem10)
-        
-        let newItem11 = Item(title: "K")
-        itemArray.append(newItem11)
-        
+        tableView.tableFooterView = UIView()
+        loadItems()
     }
+    
     
     // MARK: TableView DataSource Methods
     override func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
@@ -74,9 +41,23 @@ class TodoListViewController: UITableViewController {
         let cellAccessoryType: UITableViewCell.AccessoryType = tableView.cellForRow(at: indexPath)?.accessoryType == .checkmark ? .none : .checkmark
         
         itemArray[indexPath.row].done.toggle()
+        saveItems()
         
         tableView.cellForRow(at: indexPath)?.accessoryType = cellAccessoryType
         tableView.deselectRow(at: indexPath, animated: true)
+    }
+    
+    override func tableView(_ tableView: UITableView, leadingSwipeActionsConfigurationForRowAt indexPath: IndexPath) -> UISwipeActionsConfiguration? {
+        
+        let deleteAction = UIContextualAction(style: .destructive, title: "Delete") { (action, view, sucess) in
+            self.itemArray.remove(at: indexPath.row)
+            self.tableView.deleteRows(at: [indexPath], with: .fade)
+            self.saveItems()
+            sucess(true)
+        }
+        
+        deleteAction.image = UIImage(named: "trash")
+        return UISwipeActionsConfiguration(actions: [deleteAction])
     }
 
     // MARK - Add New Items
@@ -90,12 +71,36 @@ class TodoListViewController: UITableViewController {
         }
         
         alert.addAction(UIAlertAction(title: "Add Item", style: .default, handler: { (action) in
+            if textField.text == "" {
+                return
+            }
             self.itemArray.append(Item(title: textField.text!))
-
-            //self.defaults.set(self.items, forKey: self.key)
+            self.saveItems()
+            
             self.tableView.reloadData()
         }))
-        
         self.present(alert, animated: true)
+    }
+    
+    // MARK: Model Manupulation Methods
+    func saveItems() {
+        let encoder = PropertyListEncoder()
+        do {
+            let data = try encoder.encode(itemArray)
+            try data.write(to: dataFilePath!)
+        } catch {
+            print("Error encoding item array, \(error)")
+        }
+    }
+    
+    func loadItems() {
+        if let data = try? Data(contentsOf: dataFilePath!) {
+            let decoder = PropertyListDecoder()
+            do {
+                itemArray = try decoder.decode([Item].self, from: data)
+            } catch {
+                print("error loading items \(error)")
+            }
+        }
     }
 }
