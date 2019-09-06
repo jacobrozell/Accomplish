@@ -101,8 +101,7 @@ class TodoListViewController: UITableViewController {
         tableView.reloadData()
     }
     
-    func loadItems() {
-        let request: NSFetchRequest<Item> = Item.fetchRequest()
+    func loadItems(with request: NSFetchRequest<Item>=Item.fetchRequest()) {
         do {
             itemArray = try context.fetch(request)
         } catch {
@@ -122,6 +121,10 @@ class TodoListViewController: UITableViewController {
 extension TodoListViewController: UISearchBarDelegate {
     func searchBarSearchButtonClicked(_ searchBar: UISearchBar) {
         let request: NSFetchRequest<Item> = Item.fetchRequest()
-        print(searchBar.text)
+        
+        request.predicate = NSPredicate(format: "title CONTAINS[cd] %@", searchBar.text!)
+        request.sortDescriptors = [NSSortDescriptor(key: "title", ascending: true)]
+        
+        loadItems(with: request)
     }
 }
