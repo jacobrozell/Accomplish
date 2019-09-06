@@ -19,6 +19,7 @@ class TodoListViewController: UITableViewController {
     override func viewDidLoad() {
         super.viewDidLoad()
         tableView.tableFooterView = UIView()
+        searchBar.delegate = self
         
         print(FileManager.default.urls(for: .documentDirectory, in: .userDomainMask).first)
         loadItems()
@@ -107,6 +108,7 @@ class TodoListViewController: UITableViewController {
         } catch {
             print("error fetching data from context \(error.localizedDescription)")
         }
+        tableView.reloadData()
     }
     
     func deleteItem(at indexPath: IndexPath) {
@@ -126,5 +128,15 @@ extension TodoListViewController: UISearchBarDelegate {
         request.sortDescriptors = [NSSortDescriptor(key: "title", ascending: true)]
         
         loadItems(with: request)
+    }
+    
+    func searchBar(_ searchBar: UISearchBar, textDidChange searchText: String) {
+        if searchBar.text?.count == 0 {
+            loadItems()
+            
+            DispatchQueue.main.async {
+                searchBar.resignFirstResponder()
+            }
+        }
     }
 }
