@@ -46,6 +46,7 @@ class CategoryTableViewController: UITableViewController {
         if segue.identifier == "goToItems" {
             let destinationVC = segue.destination as! TodoListViewController
             destinationVC.selectedCategory = sender as? Category
+            destinationVC.title = (sender as? Category)?.name
         }
     }
 
